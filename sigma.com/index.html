@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>มหัศจรรย์แห่งแสง | Natural Light vs Artificial Light Infographics</title>
+    <!-- Google Fonts: Prompt & Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Spectrum Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#070a12',
+                        cardBg: 'rgba(15, 23, 42, 0.65)',
+                        borderGlow: 'rgba(56, 189, 248, 0.2)',
+                        sunGold: '#fbbf24',
+                        neonBlue: '#38bdf8',
+                        neonPurple: '#a855f7',
+                        neonGreen: '#34d399',
+                    },
+                    fontFamily: {
+                        prompt: ['Prompt', 'sans-serif'],
+                        kanit: ['Kanit', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-12px)' },
+                        },
+                        glow: {
+                            '0%': { filter: 'drop-shadow(0 0 15px rgba(56, 189, 248, 0.4))' },
+                            '100%': { filter: 'drop-shadow(0 0 30px rgba(168, 85, 247, 0.8))' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #070a12;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphic Cards */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-panel-hover {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-panel-hover:hover {
+            transform: translateY(-5px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.25);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070a12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+
+        /* Rainbow EM Spectrum Bar */
+        .spectrum-bar {
+            background: linear-gradient(90deg, 
+                #4c1d95 0%,   /* Gamma/X-Ray */
+                #7c3aed 15%,  /* UV */
+                #3b82f6 30%,  /* Blue Light */
+                #10b981 45%,  /* Green */
+                #eab308 60%,  /* Yellow */
+                #f97316 75%,  /* Orange */
+                #ef4444 85%,  /* Red */
+                #881337 100%  /* Infrared */
+            );
+        }
+
+        /* Glow Text Effect */
+        .glow-text-sun {
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+        }
+        .glow-text-neon {
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+        }
+
+        /* Flip Card Effect */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-neonBlue selection:text-darkBg">
+
+    <!-- Canvas Background for Interactive Particles -->
+    <canvas id="heroCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- Navigation Header -->
+    <nav class="fixed top-0 left-0 w-full z-50 glass-panel border-b border-white/10 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sunGold to-neonBlue flex items-center justify-center shadow-lg shadow-neonBlue/20">
+                    <i class="fa-solid font-bold fa-sun text-darkBg text-xl"></i>
+                </div>
+                <span class="font-kanit font-bold text-xl tracking-wider text-white">LUMINA<span class="text-neonBlue">SCI</span></span>
+            </div>
+            <div class="hidden md:flex space-x-8 font-medium text-sm text-slate-300">
+                <a href="#hero" class="hover:text-neonBlue transition-colors">หน้าแรก</a>
+                <a href="#spectrum" class="hover:text-neonBlue transition-colors">สเปกตรัมแสง</a>
+                <a href="#comparison" class="hover:text-neonBlue transition-colors">เปรียบเทียบเชิงลึก</a>
+                <a href="#mechanism" class="hover:text-neonBlue transition-colors">กลไกฟิสิกส์</a>
+                <a href="#health" class="hover:text-neonBlue transition-colors">ผลกระทบ</a>
+                <a href="#quiz" class="hover:text-neonBlue transition-colors">ควิซทดสอบ</a>
+            </div>
+            <button onclick="scrollToSection('spectrum')" class="bg-gradient-to-r from-neonBlue to-neonPurple text-darkBg font-semibold px-5 py-2 rounded-full shadow-lg hover:brightness-110 transition-all text-sm font-kanit">
+                เริ่มการเรียนรู้ <i class="fa-solid fa-arrow-down ml-1"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 1. Hero Section -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-4 z-10 overflow-hidden">
+        <!-- Glowing Orbs in background -->
+        <div class="absolute top-1/4 left-10 w-96 h-96 bg-sunGold/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
+        <div class="absolute bottom-1/4 right-10 w-96 h-96 bg-neonPurple/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
+
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full glass-panel border border-neonBlue/30 text-neonBlue text-xs font-semibold uppercase tracking-widest mb-6 animate-float">
+                <i class="fa-solid fa-atom text-sm"></i>
+                <span>วิทยาศาสตร์แห่งคลื่นแม่เหล็กไฟฟ้า</span>
+            </div>
+            
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-kanit font-extrabold text-white leading-tight mb-6">
+                มหัศจรรย์แห่งแสง <br>
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-sunGold via-amber-300 to-amber-500 glow-text-sun">แสงธรรมชาติ</span> 
+                <span class="text-slate-400">VS</span> 
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-neonBlue via-cyan-300 to-neonPurple glow-text-neon">แสงสังเคราะห์</span>
+            </h1>
+
+            <p class="text-slate-300 text-base sm:text-lg md:text-xl max-w-3xl mx-auto font-light leading-relaxed mb-10">
+                สำรวจโลกของ "โฟตอน" อนุภาคพลังงานไร้มวลที่ขับเคลื่อนชีวภาพบนโลก ถอดรหัสความแตกต่างระหว่างรังสีสุริยะที่แผ่ครอบคลุมทุกความยาวคลื่น และนวัตกรรมหลอดประหยัดไฟยุคใหม่ผ่านอินโฟกราฟิกปฏิสัมพันธ์สุดล้ำ
+            </p>
+
+            <!-- Quick Stats Badges -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
+                <div class="glass-panel p-4 rounded-2xl border border-white/5 hover:border-sunGold/40 transition-all">
+                    <div class="text-sunGold text-2xl font-bold font-kanit mb-1">299,792 km/s</div>
+                    <div class="text-xs text-slate-400">ความเร็วแสงในสูญญากาศ</div>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl border border-white/5 hover:border-neonBlue/40 transition-all">
+                    <div class="text-neonBlue text-2xl font-bold font-kanit mb-1">380 - 750 nm</div>
+                    <div class="text-xs text-slate-400">ช่วงความยาวคลื่นสายตามนุษย์</div>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl border border-white/5 hover:border-neonPurple/40 transition-all">
+                    <div class="text-neonPurple text-2xl font-bold font-kanit mb-1">5,778 K</div>
+                    <div class="text-xs text-slate-400">อุณหภูมิพื้นผิวดวงอาทิตย์</div>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl border border-white/5 hover:border-neonGreen/40 transition-all">
+                    <div class="text-neonGreen text-2xl font-bold font-kanit mb-1">8 นาที 20 วินาที</div>
+                    <div class="text-xs text-slate-400">เวลาที่แสงอาทิตย์เดินทางมาโลก</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#spectrum" class="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-sunGold to-amber-500 text-darkBg font-kanit font-bold text-base shadow-xl hover:shadow-sunGold/20 hover:scale-105 transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-prism"></i>
+                    <span>สำรวจสเปกตรัมแสง</span>
+                </a>
+                <a href="#comparison" class="w-full sm:w-auto px-8 py-4 rounded-full glass-panel border border-white/20 text-white font-kanit font-medium text-base hover:bg-white/10 transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <span>เปรียบเทียบคุณสมบัติ</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Interactive Spectrum Visualizer -->
+    <section id="spectrum" class="py-20 px-4 relative z-10 max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl sm:text-5xl font-kanit font-bold text-white mb-4">
+                สเปกตรัมคลื่นแม่เหล็กไฟฟ้า <span class="text-neonBlue">(Electromagnetic Spectrum)</span>
+            </h2>
+            <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
+                แสงที่เรามองเห็น (Visible Light) เป็นเพียงช่วงแคบๆ ของแถบรังสีแม่เหล็กไฟฟ้าทั้งหมด คลิกที่ช่วงความยาวคลื่นเพื่อเจาะลึก
+            </p>
+        </div>
+
+        <!-- Spectrum Interactive Bar Container -->
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 relative overflow-hidden">
+            <!-- Spectrum Wavelength Scale Header -->
+            <div class="flex justify-between text-xs text-slate-400 mb-2 font-mono">
+                <span>10⁻¹² m (Gamma)</span>
+                <span>10⁻⁸ m (UV)</span>
+                <span class="text-neonBlue font-bold">400nm - 700nm (Visible)</span>
+                <span>10⁻³ m (Infrared)</span>
+                <span>10³ m (Radio)</span>
+            </div>
+
+            <!-- Gradient Spectrum Bar -->
+            <div class="h-16 w-full rounded-2xl spectrum-bar relative cursor-pointer shadow-inner shadow-black/60 flex items-center justify-between px-4 group">
+                <button onclick="showSpectrumInfo('gamma')" class="h-12 px-3 rounded-lg bg-black/40 hover:bg-black/80 backdrop-blur text-white text-xs font-semibold transition">คลื่นรังสีแกมมา/เอ็กซ์</button>
+                <button onclick="showSpectrumInfo('uv')" class="h-12 px-3 rounded-lg bg-black/40 hover:bg-black/80 backdrop-blur text-purple-300 text-xs font-semibold transition">อัลตราไวโอเลต (UV)</button>
+                <button onclick="showSpectrumInfo('visible')" class="h-12 px-4 rounded-lg bg-white/20 border-2 border-white text-white text-sm font-bold shadow-lg transition transform hover:scale-105">แสงที่ตามองเห็น (Visible)</button>
+                <button onclick="showSpectrumInfo('ir')" class="h-12 px-3 rounded-lg bg-black/40 hover:bg-black/80 backdrop-blur text-red-300 text-xs font-semibold transition">อินฟราเรด (IR)</button>
+                <button onclick="showSpectrumInfo('radio')" class="h-12 px-3 rounded-lg bg-black/40 hover:bg-black/80 backdrop-blur text-slate-300 text-xs font-semibold transition">คลื่นวิทยุ / ไมโครเวฟ</button>
+            </div>
+
+            <!-- Dynamic Dynamic Detail Display Card -->
+            <div id="spectrumDetail" class="mt-8 p-6 rounded-2xl bg-slate-900/80 border border-neonBlue/30 transition-all">
+                <div class="flex items-start space-x-4">
+                    <div id="spectrumIcon" class="w-14 h-14 rounded-2xl bg-neonBlue/20 text-neonBlue flex items-center justify-center text-2xl flex-shrink-0">
+                        <i class="fa-solid fa-eye"></i>
+                    </div>
+                    <div>
+                        <h3 id="spectrumTitle" class="text-xl font-kanit font-bold text-white mb-2">แสงที่ตามองเห็น (Visible Light: 380 - 750 nm)</h3>
+                        <p id="spectrumDesc" class="text-slate-300 text-sm leading-relaxed mb-3">
+                            ช่วงคลื่นเดียวที่เซลล์รับแสงในเรตินาของมนุษย์ (Cones & Rods) สามารถประมวลผลเป็นภาพสีได้ ประกอบด้วย 7 สีหลัก (ม่วง คราม น้ำเงิน เขียว เหลือง แสด แดง) ดวงอาทิตย์แผ่ความยาวคลื่นนี้มากที่สุด ทำให้วิวัฒนาการของดวงตาสิ่งมีชีวิตบนโลกปรับเข้ากับสเปกตรัมนี้
+                        </p>
+                        <div id="spectrumTags" class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-sunGold/20 text-sunGold text-xs font-medium">แหล่งธรรมชาติ: ดวงอาทิตย์, ไฟ</span>
+                            <span class="px-3 py-1 rounded-full bg-neonBlue/20 text-neonBlue text-xs font-medium">แหล่งสังเคราะห์: หลอด LED, เลเซอร์</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Interactive Comparison Tool (Natural vs Artificial) -->
+    <section id="comparison" class="py-20 px-4 relative z-10 bg-slate-950/60">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-5xl font-kanit font-bold text-white mb-4">
+                    การเปรียบเทียบเชิงลึก: สุริยะ VS ไฟฟ้า
+                </h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
+                    เจาะลึกความแตกต่างโครงสร้างสเปกตรัม การใช้พลังงาน และบทบาททางชีววิทยา
+                </p>
+            </div>
+
+            <!-- 2 Main Cards Grid -->
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                
+                <!-- Natural Light Card -->
+                <div class="glass-panel glass-panel-hover p-8 rounded-3xl border border-sunGold/20 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 text-sunGold/10 text-9xl font-bold select-none pointer-events-none">
+                        <i class="fa-solid fa-sun"></i>
+                    </div>
+
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sunGold/10 text-sunGold text-xs font-semibold mb-6">
+                        <i class="fa-solid fa-leaf"></i>
+                        <span>กำเนิดจากธรรมชาติ (Natural Source)</span>
+                    </div>
+
+                    <h3 class="text-2xl sm:text-3xl font-kanit font-bold text-white mb-4">แสงธรรมชาติ (Natural Light)</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        แสงที่เกิดขึ้นเองในจักรวาล โดยมีแหล่งกำเนิดหลักคือปฏิกิริยานิวเคลียร์ฟิวชันบนดวงอาทิตย์ ดาวฤกษ์ และสิ่งมีชีวิตเรืองแสง (Bioluminescence) เช่น หิ่งห้อย หรือจุลินทรีย์ใต้ทะเลลึก
+                    </p>
+
+                    <!-- Features Checklist -->
+                    <div class="space-y-4 mb-8">
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-circle-check text-sunGold mt-1"></i>
+                            <div>
+                                <span class="font-semibold text-white text-sm">สเปกตรัมสมบูรณ์แบบ (Continuous Spectrum):</span>
+                                <p class="text-slate-400 text-xs">มีความยาวคลื่นต่อเนื่องกันครบทุกสี รวมถึง UV และ Infrared ที่เป็นประโยชน์</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-circle-check text-sunGold mt-1"></i>
+                            <div>
+                                <span class="font-semibold text-white text-sm">ควบคุมนาฬิกาชีวภาพ (Circadian Rhythm):</span>
+                                <p class="text-slate-400 text-xs">แสงอาทิตย์ยามเช้าช่วยยับยั้งการหลั่งฮอร์โมนเมลาโทนิน เพิ่มความสดชื่น</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-circle-check text-sunGold mt-1"></i>
+                            <div>
+                                <span class="font-semibold text-white text-sm">ดรรชนีความถูกต้องของสี (CRI = 100):</span>
+                                <p class="text-slate-400 text-xs">เป็นค่ามาตรฐานในการสะท้อนสีของวัตถุให้ตรงตามความเป็นจริงที่สุด</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Examples Visual Grid -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-slate-900/90 p-3 rounded-xl text-center border border-white/5">
+                            <i class="fa-solid fa-sun text-sunGold text-xl mb-1"></i>
+                            <div class="text-xs font-medium text-slate-200">ดวงอาทิตย์</div>
+                        </div>
+                        <div class="bg-slate-900/90 p-3 rounded-xl text-center border border-white/5">
+                            <i class="fa-solid fa-star text-amber-300 text-xl mb-1"></i>
+                            <div class="text-xs font-medium text-slate-200">ดาราศาสตร์</div>
+                        </div>
+                        <div class="bg-slate-900/90 p-3 rounded-xl text-center border border-white/5">
+                            <i class="fa-solid fa-bugs text-emerald-400 text-xl mb-1"></i>
+                            <div class="text-xs font-medium text-slate-200">หิ่งห้อยเรืองแสง</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Artificial Light Card -->
+                <div class="glass-panel glass-panel-hover p-8 rounded-3xl border border-neonBlue/20 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 text-neonBlue/10 text-9xl font-bold select-none pointer-events-none">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-neonBlue/10 text-neonBlue text-xs font-semibold mb-6">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>มนุษย์สร้างขึ้น (Man-Made Source)</span>
+                    </div>
+
+                    <h3 class="text-2xl sm:text-3xl font-kanit font-bold text-white mb-4">แสงสังเคราะห์ (Artificial Light)</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        แสงที่เกิดจากการเปลี่ยนพลังงานไฟฟ้าหรือพลังงานเคมีให้เป็นพลังงานแสง โดยฝีมือมนุษย์ เช่น หลอดไส้ (Incandescent), หลอดฟลูออเรสเซนต์, LED และแสงเลเซอร์
+                    </p>
+
+                    <!-- Features Checklist -->
+                    <div class="space-y-4 mb-8">
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-circle-check text-neonBlue mt-1"></i>
+                            <div>
+                                <span class="font-semibold text-white text-sm">การควบคุมอุณหภูมิสี (Color Temp Control):</span>
+                                <p class="text-slate-400 text-xs">สามารถเลือกความสว่างและโทนสีได้ตั้งแต่ Warm White (2700K) ถึง Daylight (6500K)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-circle-check text-neonBlue mt-1"></i>
+                            <div>
+                                <span class="font-semibold text-white text-sm">ประสิทธิภาพพลังงานสูง (High Efficiency):</span>
+                                <p class="text-slate-400 text-xs">เทคโนโลยี LED แปลงพลังงานไฟฟ้าเป็นแสงได้สูงถึง 80-90% โดยไม่เกิดความร้อนสะสม</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-circle-check text-neonBlue mt-1"></i>
+                            <div>
+                                <span class="font-semibold text-white text-sm">สเปกตรัมเฉพาะช่วง (Spike Spectrum):</span>
+                                <p class="text-slate-400 text-xs">หลอดไฟสังเคราะห์มักมีคลื่นแสงโดดเด่นบางสี เช่น แสงสีฟ้า (Blue Light Spike)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Examples Visual Grid -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-slate-900/90 p-3 rounded-xl text-center border border-white/5">
+                            <i class="fa-solid fa-lightbulb text-amber-400 text-xl mb-1"></i>
+                            <div class="text-xs font-medium text-slate-200">หลอดไส้</div>
+                        </div>
+                        <div class="bg-slate-900/90 p-3 rounded-xl text-center border border-white/5">
+                            <i class="fa-solid fa-microchip text-neonBlue text-xl mb-1"></i>
+                            <div class="text-xs font-medium text-slate-200">LED Luminous</div>
+                        </div>
+                        <div class="bg-slate-900/90 p-3 rounded-xl text-center border border-white/5">
+                            <i class="fa-solid fa-wand-magic-sparkles text-neonPurple text-xl mb-1"></i>
+                            <div class="text-xs font-medium text-slate-200">เลเซอร์ / นีออน</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Color Temperature Kelvin Interactive Slider Tool -->
+            <div class="glass-panel p-8 rounded-3xl border border-white/10">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <div>
+                        <h4 class="text-xl font-kanit font-bold text-white">เครื่องทดลองอุณหภูมิสีแสง (Color Temperature Simulator)</h4>
+                        <p class="text-slate-400 text-xs sm:text-sm">ปรับแถบสไลเดอร์เพื่อดูการเปลี่ยนแปลงของค่าเคลวิน (Kelvin) และอารมณ์ของแสง</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 font-mono text-2xl font-bold text-neonBlue" id="kelvinValue">5500 K</div>
+                </div>
+
+                <!-- Color Viewport Sandbox -->
+                <div id="kelvinBox" class="w-full h-32 rounded-2xl transition-all duration-300 flex items-center justify-center border border-white/10 shadow-2xl mb-6">
+                    <span id="kelvinLabel" class="font-kanit font-bold text-lg text-slate-900 bg-white/80 px-4 py-2 rounded-full backdrop-blur">
+                        Daylight (แสงแดดเที่ยงวัน)
+                    </span>
+                </div>
+
+                <!-- Range Slider Input -->
+                <input type="range" id="kelvinSlider" min="1000" max="10000" value="5500" step="100" 
+                    class="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-neonBlue">
+                
+                <div class="flex justify-between text-xs text-slate-400 mt-2 font-mono">
+                    <span>1,000K (แสงเทียน)</span>
+                    <span>3,000K (Warm White)</span>
+                    <span>5,500K (Sunlight)</span>
+                    <span>7,000K (Cool White)</span>
+                    <span>10,000K (ท้องฟ้าโปร่ง)</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 4. How Light is Generated (Physics Mechanism) -->
+    <section id="mechanism" class="py-20 px-4 relative z-10 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl sm:text-5xl font-kanit font-bold text-white mb-4">
+                กลไกทางฟิสิกส์: แสงเกิดขึ้นได้อย่างไร?
+            </h2>
+            <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
+                เปรียบเทียบกระบวนการปลดปล่อยพลังงานโฟตอนระดับอะตอม ระหว่างธรรมชาติและเทคโนโลยีมนุษย์
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Sun Fusion Card -->
+            <div class="glass-panel p-8 rounded-3xl border border-sunGold/30">
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-sunGold/20 text-sunGold flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-sun"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-kanit font-bold text-white">1. นิวเคลียร์ฟิวชัน (Nuclear Fusion)</h3>
+                        <span class="text-xs text-sunGold font-semibold">กระบวนการกำเนิดแสงในธรรมชาติ</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-6 rounded-2xl border border-white/5 mb-6 text-center">
+                    <!-- Atomic Fusion SVG Visual Animation -->
+                    <svg class="w-full h-40 mx-auto" viewBox="0 0 300 150">
+                        <!-- Hydrogen Cores -->
+                        <circle cx="60" cy="75" r="18" fill="#fbbf24" class="animate-pulse">
+                            <animate attributeName="cx" values="50;100;50" dur="3s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="54" y="80" font-size="12" fill="#000" font-weight="bold">H¹</text>
+
+                        <circle cx="140" cy="75" r="18" fill="#fbbf24" class="animate-pulse">
+                            <animate attributeName="cx" values="150;100;150" dur="3s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="134" y="80" font-size="12" fill="#000" font-weight="bold">H¹</text>
+
+                        <!-- Collision Ray Release -->
+                        <path d="M 100 75 L 260 30" stroke="#38bdf8" stroke-width="3" stroke-dasharray="5,5">
+                            <animate attributeName="stroke-dashoffset" values="20;0" dur="1s" repeatCount="indefinite"/>
+                        </path>
+                        <path d="M 100 75 L 260 120" stroke="#fbbf24" stroke-width="3" stroke-dasharray="5,5">
+                            <animate attributeName="stroke-dashoffset" values="20;0" dur="1s" repeatCount="indefinite"/>
+                        </path>
+
+                        <!-- Photon particle emitted -->
+                        <circle cx="240" cy="35" r="8" fill="#38bdf8"/>
+                        <text x="255" y="40" font-size="11" fill="#38bdf8" font-weight="bold">Photon γ</text>
+                    </svg>
+                </div>
+
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    ใจกลางดวงอาทิตย์มีอุณหภูมิสูงกว่า 15 ล้านองศาเซลเซียส อะตอมของธาตุไฮโดรเจนหลอมรวมกันกลายเป็นฮีเลียม พลังงานส่วนต่างของมวลสารตามสมการ $E=mc^2$ ของไอน์สไตน์ จะถูกปลดปล่อยออกมาในรูปคลื่นรังสีแกมมา และค่อยๆ เดินทางผ่านชั้นดวงอาทิตย์กลายเป็น **คลื่นแสงสว่าง**
+                </p>
+            </div>
+
+            <!-- LED Electron Excitation Card -->
+            <div class="glass-panel p-8 rounded-3xl border border-neonBlue/30">
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-neonBlue/20 text-neonBlue flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-kanit font-bold text-white">2. การกระตุ้นอิเล็กตรอน (Electron Excitation)</h3>
+                        <span class="text-xs text-neonBlue font-semibold">กระบวนการกำเนิดแสงหลอด LED</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-6 rounded-2xl border border-white/5 mb-6 text-center">
+                    <!-- LED Quantum Jump SVG Animation -->
+                    <svg class="w-full h-40 mx-auto" viewBox="0 0 300 150">
+                        <!-- Orbit Layers -->
+                        <circle cx="150" cy="75" r="25" stroke="#475569" stroke-width="2" fill="none"/>
+                        <circle cx="150" cy="75" r="55" stroke="#475569" stroke-width="2" fill="none" stroke-dasharray="4,4"/>
+                        
+                        <!-- Core Nucleus -->
+                        <circle cx="150" cy="75" r="14" fill="#a855f7"/>
+                        <text x="143" y="79" font-size="10" fill="#fff" font-weight="bold">+ p</text>
+
+                        <!-- Electron jumping orbits -->
+                        <circle cx="150" cy="20" r="7" fill="#38bdf8">
+                            <animate attributeName="cy" values="20;50;20" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+
+                        <!-- Emitted Photon Wave -->
+                        <path d="M 160 35 Q 180 20, 200 35 T 240 35" stroke="#34d399" stroke-width="3" fill="none">
+                            <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/>
+                        </path>
+                        <text x="210" y="20" font-size="11" fill="#34d399" font-weight="bold">hν (Photon)</text>
+                    </svg>
+                </div>
+
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    ในสารนวัตกรรมครึ่งตัวนำ (Semiconductor) ของหลอด LED เมื่อป้อนกระแสไฟฟ้า อิเล็กตรอนจะได้รับพลังงานและกระโดดข้ามระดับพลังงาน (Band Gap) เมื่อมันตกลงกลับสู่ระดับพลังงานต่ำสุด มันจะปลดปล่อยพลังงานส่วนเกินออกมาเป็น **โฟตอนแสงความยาวคลื่นเฉพาะ** โดยสูญเสียพลังงานความร้อนน้อยมาก
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Health & Environment Impacts -->
+    <section id="health" class="py-20 px-4 relative z-10 bg-slate-950/60">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-5xl font-kanit font-bold text-white mb-4">
+                    ผลกระทบต่อสิ่งมีชีวิตและมนุษย์
+                </h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
+                    แสงไม่ได้มีประโยชน์แค่ความสว่าง แต่เป็นตัวกำหนดนาฬิกาชีวิตและสมดุลระบบนิเวศ
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                
+                <!-- Card 1: Blue Light & Melatonin -->
+                <div class="glass-panel p-6 rounded-2xl border border-white/10 hover:border-neonBlue/40 transition">
+                    <div class="w-12 h-12 rounded-xl bg-neonBlue/20 text-neonBlue flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <h3 class="text-lg font-kanit font-bold text-white mb-2">ผลกระทบของ แสงสีฟ้า (Blue Light)</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">
+                        แสงความยาวคลื่นช่วง 400-450 nm จากหน้าจอและหลอดไฟ LED ในตอนกลางคืน จะหลอกสมองว่ายังคงเป็นเวลากลางวัน รบกวนการผลิต **เมลาโทนิน (Melatonin)** ทำให้ นอนหลับยาก ตาสูญเสียความชุ่มชื้น และสะสมความเครียดเรื้อรัง
+                    </p>
+                </div>
+
+                <!-- Card 2: Light Pollution -->
+                <div class="glass-panel p-6 rounded-2xl border border-white/10 hover:border-sunGold/40 transition">
+                    <div class="w-12 h-12 rounded-xl bg-sunGold/20 text-sunGold flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-city"></i>
+                    </div>
+                    <h3 class="text-lg font-kanit font-bold text-white mb-2">มลภาวะทางแสง (Light Pollution)</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">
+                        แสงไฟส่วนเกินจากเมืองหลวงทำให้เกิด "Skyglow" บดบังแสงดาว ส่งผลกระทบต่อสัตว์ที่เดินทางทิศทางด้วยดวงดาว เช่น นกอพยพ และเต่าทะเลแรกเกิดที่สับสนทิศทางคลื่นทะเล รวมถึงรบกวนวงจรผสมพันธุ์ของแมลง
+                    </p>
+                </div>
+
+                <!-- Card 3: UV Rays & Vitamin D -->
+                <div class="glass-panel p-6 rounded-2xl border border-white/10 hover:border-neonPurple/40 transition">
+                    <div class="w-12 h-12 rounded-xl bg-neonPurple/20 text-neonPurple flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-sun-plant-wilt"></i>
+                    </div>
+                    <h3 class="text-lg font-kanit font-bold text-white mb-2">รังสี UV กับวิตามิน D</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">
+                        แสงธรรมชาติมีรังสี UVB ที่กระตุ้นผิวหนังมนุษย์ให้สังเคราะห์ **วิตามิน D3** เสริมสร้างกระดูกและภูมิคุ้มกัน ซึ่งแสงสังเคราะห์ส่วนใหญ่ในอาคารไม่สามารถทดแทนคุณสมบัติทางเคมีชีวภาพข้อนี้ได้
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Interactive Science Quiz / Fun Facts -->
+    <section id="quiz" class="py-20 px-4 relative z-10 max-w-5xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl sm:text-5xl font-kanit font-bold text-white mb-4">
+                เกร็ดความรู้ & แบบทดสอบอินเทอร์แอคทีฟ
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base">
+                คลิกที่การ์ดเพื่อพลิกดูคำตอบความจริงทางฟิสิกส์น่าทึ่งเกี่ยวกับแสง!
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <!-- Flip Card 1 -->
+            <div class="perspective-1000 h-64 cursor-pointer group" onclick="this.querySelector('.card-inner').classList.toggle('rotate-y-180')">
+                <div class="card-inner relative w-full h-full transform-style-3d">
+                    <!-- Front -->
+                    <div class="absolute w-full h-full glass-panel p-8 rounded-3xl border border-white/10 backface-hidden flex flex-col justify-between">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-neonBlue uppercase tracking-wider">คำถามฟิสิกส์ข้อที่ 1</span>
+                            <i class="fa-solid fa-rotate text-slate-500"></i>
+                        </div>
+                        <h3 class="text-xl font-kanit font-bold text-white">"ดวงอาทิตย์ปล่อยแสงสีอะไรออกมามากที่สุด?"</h3>
+                        <p class="text-slate-400 text-xs">แตะหรือคลิกการ์ดเพื่อพลิกดูคำตอบ</p>
+                    </div>
+                    <!-- Back -->
+                    <div class="absolute w-full h-full glass-panel p-8 rounded-3xl border border-sunGold/40 bg-slate-900 backface-hidden rotate-y-180 flex flex-col justify-center">
+                        <h4 class="text-lg font-kanit font-bold text-sunGold mb-2">คำตอบ: แสงสีเขียว-น้ำเงิน (Green-Blue Light)!</h4>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            ตามกฎการแผ่รังสีของพลังค์ (Planck's Law) สเปกตรัมสูงสุดของดวงอาทิตย์อยู่ที่ประมาณ 500 nm (สีเขียว) แต่เพราะดวงอาทิตย์แผ่สีอื่นออกมาพร้อมกันด้วย ตาของมนุษย์จึงประมวลผลรวมกันเห็นเป็น **สีขาว** หรือเหลืองอ่อน!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flip Card 2 -->
+            <div class="perspective-1000 h-64 cursor-pointer group" onclick="this.querySelector('.card-inner').classList.toggle('rotate-y-180')">
+                <div class="card-inner relative w-full h-full transform-style-3d">
+                    <!-- Front -->
+                    <div class="absolute w-full h-full glass-panel p-8 rounded-3xl border border-white/10 backface-hidden flex flex-col justify-between">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-neonPurple uppercase tracking-wider">คำถามฟิสิกส์ข้อที่ 2</span>
+                            <i class="fa-solid fa-rotate text-slate-500"></i>
+                        </div>
+                        <h3 class="text-xl font-kanit font-bold text-white">"เงาของต้นไม้ใต้แสงแดด มีส่วนช่วยให้เกิดกระบวนการใด?"</h3>
+                        <p class="text-slate-400 text-xs">แตะหรือคลิกการ์ดเพื่อพลิกดูคำตอบ</p>
+                    </div>
+                    <!-- Back -->
+                    <div class="absolute w-full h-full glass-panel p-8 rounded-3xl border border-neonPurple/40 bg-slate-900 backface-hidden rotate-y-180 flex flex-col justify-center">
+                        <h4 class="text-lg font-kanit font-bold text-neonPurple mb-2">คำตอบ: การสังเคราะห์ด้วยแสง (Photosynthesis)!</h4>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            คลอโรฟิลล์ในพืชจะดูดกลืนแสงสีแดงและแสงสีน้ำเงินได้ดีที่สุดในการสร้างน้ำตาล และสะท้อนแสงสีเขียวกลับมา นั่นคือเหตุผลที่เรามองเห็นใบไม้ส่วนใหญ่เป็นสีเขียวนั่นเอง!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-white/10 py-12 px-4 relative z-10 text-center text-slate-400 text-xs">
+        <div class="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-4">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-sun text-sunGold text-lg"></i>
+                <span class="font-kanit font-bold text-white text-base">LUMINA SCI INFOGRAPHICS</span>
+            </div>
+            <p>ออกแบบและพัฒนาระบบสื่อการเรียนรู้วิทยาศาสตร์เชิงโต้ตอบยุคใหม่</p>
+            <p class="text-slate-500">© 2026 LuminaSci Interactive Science Infographics. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive JavaScript Engine -->
+    <script>
+        // Smooth Scroll Navigation Helper
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 1. Particle Hero Canvas Animation Engine
+        const canvas = document.getElementById('heroCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
+                this.color = Math.random() > 0.5 ? '#38bdf8' : '#fbbf24';
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // Mouse interaction glow response
+                if (mouse.x && mouse.y) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        this.x += dx * 0.02;
+                        this.y += dy * 0.02;
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < 70; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // 2. Spectrum Data Dictionary & Switcher
+        const spectrumData = {
+            gamma: {
+                title: "คลื่นรังสีแกมมา และ รังสีเอ็กซ์ (Gamma & X-Ray)",
+                desc: "มีความยาวคลื่นสั้นที่สุด (< 10 nm) แต่มีพลังงานและความถี่สูงที่สุด สามารถทะลุทะลวงเนื้อเยื่อมนุษย์ได้ เกิดจากปฏิกิริยานิวเคลียร์ในอวกาศหรือการระเบิดของดาวซูเปอร์โนวา",
+                icon: "fa-solid fa-radiation",
+                iconColor: "text-purple-400 bg-purple-500/20",
+                nat: "ซูเปอร์โนวา, หลุมดำ",
+                art: "เครื่องเอกซเรย์ทางการแพทย์"
+            },
+            uv: {
+                title: "รังสีอัลตราไวโอเลต (Ultraviolet: 10 - 400 nm)",
+                desc: "คลื่นความถี่สูงกว่าแสงสีม่วง ดวงอาทิตย์แผ่รังสี UVA, UVB และ UVC ออกมา UVC ถูกชั้นโอโซนดูดซับไว้ UVB ช่วยสังเคราะห์วิตามิน D แต่มนุษย์สร้างหลอด UV สำหรับฆ่าเชื้อโรค (UVC LED)",
+                icon: "fa-solid fa-sun-plant-wilt",
+                iconColor: "text-purple-300 bg-purple-400/20",
+                nat: "ดวงอาทิตย์ (UVA/UVB)",
+                art: "หลอดฆ่าเชื้อ UVC, หลอด Blacklight"
+            },
+            visible: {
+                title: "แสงที่ตามองเห็น (Visible Light: 380 - 750 nm)",
+                desc: "ช่วงคลื่นเดียวที่เซลล์รับแสงในเรตินาของมนุษย์สามารถประมวลผลเป็นภาพสีได้ ประกอบด้วย 7 สีหลัก ดวงอาทิตย์แผ่ความยาวคลื่นนี้มากที่สุด ทำให้ตาของสิ่งมีชีวิตบนโลกปรับเข้ากับสเปกตรัมนี้",
+                icon: "fa-solid fa-eye",
+                iconColor: "text-neonBlue bg-neonBlue/20",
+                nat: "ดวงอาทิตย์, ลาวา, หิ่งห้อย",
+                art: "หลอด LED, หน้าจอสมาร์ทโฟน"
+            },
+            ir: {
+                title: "รังสีอินฟราเรด (Infrared: 750 nm - 1 mm)",
+                desc: "คลื่นความร้อนที่วัตถุทุกชนิดที่มีอุณหภูมิแผ่ออกมา มนุษย์ไม่สามารถมองเห็นด้วยตาเปล่าแต่สัมผัสได้ในรูปความร้อน ใช้ในกล้องส่องกลางคืนและรีโมทคอนโทรล",
+                icon: "fa-solid fa-fire",
+                iconColor: "text-red-400 bg-red-500/20",
+                nat: "ความร้อนจากดวงอาทิตย์, ร่างกายสิ่งมีชีวิต",
+                art: "รีโมท TV, เตาอบไมโครเวฟ, หลอดไฟอินฟราเรด"
+            },
+            radio: {
+                title: "คลื่นวิทยุและไมโครเวฟ (Radio & Microwave: > 1 mm)",
+                desc: "มีความยาวคลื่นยาวที่สุดตั้งแต่เซนติเมตรถึงหลายกิโลเมตร พลังงานต่ำสุด ใช้ในการสื่อสารโทรคมนาคม ดาวเทียม และสัญญาณ Wi-Fi",
+                icon: "fa-solid fa-tower-cell",
+                iconColor: "text-slate-300 bg-slate-500/20",
+                nat: "คลื่นไมโครเวฟพื้นหลังอวกาศ (CMB)",
+                art: "เสาสัญญาณ 5G, สัญญาณ Wi-Fi, วิทยุ FM"
+            }
+        };
+
+        function showSpectrumInfo(key) {
+            const data = spectrumData[key];
+            document.getElementById('spectrumTitle').innerText = data.title;
+            document.getElementById('spectrumDesc').innerText = data.desc;
+            document.getElementById('spectrumIcon').className = `w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${data.iconColor}`;
+            document.getElementById('spectrumIcon').innerHTML = `<i class="${data.icon}"></i>`;
+            document.getElementById('spectrumTags').innerHTML = `
+                <span class="px-3 py-1 rounded-full bg-sunGold/20 text-sunGold text-xs font-medium">แหล่งธรรมชาติ: ${data.nat}</span>
+                <span class="px-3 py-1 rounded-full bg-neonBlue/20 text-neonBlue text-xs font-medium">แหล่งสังเคราะห์: ${data.art}</span>
+            `;
+        }
+
+        // 3. Kelvin Color Temperature Interactive Slider Logic
+        const kelvinSlider = document.getElementById('kelvinSlider');
+        const kelvinValue = document.getElementById('kelvinValue');
+        const kelvinBox = document.getElementById('kelvinBox');
+        const kelvinLabel = document.getElementById('kelvinLabel');
+
+        function kelvinToRGB(kelvin) {
+            let temp = kelvin / 100;
+            let red, green, blue;
+
+            if (temp <= 66) {
+                red = 255;
+                green = temp;
+                green = 99.4708025861 * Math.log(green) - 161.1195681661;
+                if (temp <= 19) {
+                    blue = 0;
+                } else {
+                    blue = temp - 10;
+                    blue = 138.5177312231 * Math.log(blue) - 305.0447927307;
+                }
+            } else {
+                red = temp - 60;
+                red = 329.698727446 * Math.pow(red, -0.1332047592);
+                green = temp - 60;
+                green = 288.1221695283 * Math.pow(green, -0.0755148492);
+                blue = 255;
+            }
+
+            return {
+                r: Math.max(0, Math.min(255, red)),
+                g: Math.max(0, Math.min(255, green)),
+                b: Math.max(0, Math.min(255, blue))
+            };
+        }
+
+        kelvinSlider.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value);
+            kelvinValue.innerText = val + " K";
+            let rgb = kelvinToRGB(val);
+            kelvinBox.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+            
+            // Glow box matching tint
+            kelvinBox.style.boxShadow = `0 0 35px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`;
+
+            // Update Label Description
+            if (val < 2500) {
+                kelvinLabel.innerText = "Candle Light (แสงเทียน / ส้มอบอุ่น)";
+            } else if (val < 3500) {
+                kelvinLabel.innerText = "Warm White (หลอดไส้ทังสเตน)";
+            } else if (val < 5000) {
+                kelvinLabel.innerText = "Cool White (แสงขาวนวลสบายตา)";
+            } else if (val < 6500) {
+                kelvinLabel.innerText = "Daylight (แสงแดดจัดตอนเที่ยงวัน)";
+            } else {
+                kelvinLabel.innerText = "Blue Sky (แสงท้องฟ้าโปร่งกระจ่าง)";
+            }
+        });
+
+        // Initialize default slider visual
+        kelvinSlider.dispatchEvent(new Event('input'));
+    </script>
+</body>
+</html>
